@@ -118,15 +118,25 @@ int enterEmployeeValidation(Employee arrayEmployee[], int len, int idEmployee)
     {
         //copy given employee id
         auxEmployee.id=idEmployee;
+        printf("Id del nuevo empleado: %d\n", auxEmployee.id);
         //enter last name
-        getString(auxEmployee.lastName,"\nIngrese apellido del empleado: ", "\nApellido invalido. Ingrese apellido del empleado: ", CHAR_LENGTH);
-        //enter name
-        getString(auxEmployee.name,"\nIngrese nombre del empleado: ", "\nNombre invalido. Ingrese nombre del empleado: ", CHAR_LENGTH);
-        //enter salary
-        auxEmployee.salary = getFloat("\nIngrese sueldo del empleado: ", "\nEl sueldo ingresado en invalido o supera los rangos permitidos. Ingrese sueldo: ",1,MAX_SALARY);
-        //enter sector number
-        auxEmployee.sector = getInt("\nIngrese el numero del sector del empleado: ", "\nEl numero del sector seleccionado es invalido. Ingrese el numero de sector del empleado: ",MIN_SECTOR, MAX_SECTOR);
-        returning = addEmployee(arrayEmployee,len,auxEmployee.id, auxEmployee.name, auxEmployee.lastName,auxEmployee.salary,auxEmployee.sector);
+        if(CargarStringNormalizado(auxEmployee.lastName, CHAR_LENGTH, "Ingrese el apellido del empleado: ", "El apellido ingresado es invalido.", 0, 2)==0)
+        {
+			//enter name
+			if(CargarStringNormalizado(auxEmployee.name, CHAR_LENGTH, "Ingrese el nombre del empleado: ", "El nombre ingresado es invalido.", 0, 2)==0)
+			{
+				//enter salary
+				if(CargarFlotante(&(auxEmployee.salary), "Ingrese el sueldo del empleado ($10000- $200000): ", "El sueldo ingresado es invalido.", MIN_SALARY, MAX_SALARY, 2)==0)
+				{
+					//enter sector number
+					if(CargarEntero(&(auxEmployee.sector), "Ingrese el numero del sector: ", "El sector ingresado es invalido.", MIN_SECTOR, MAX_SECTOR, 2)==0)
+					{
+						printOneEmployee(arrayEmployee[emptyPosition]);
+						returning = addEmployee(arrayEmployee,len,auxEmployee.id, auxEmployee.name, auxEmployee.lastName,auxEmployee.salary,auxEmployee.sector);
+					}
+				}
+			}
+        }
     }
 
     return returning;
@@ -182,7 +192,7 @@ int findEmployeeById(Employee arrayEmployee[], int len,int id)
     {
         for(i=0; i<len; i++)
         {
-            if (id==arrayEmployee[i].id)
+            if (id==arrayEmployee[i].id && arrayEmployee[i].isEmpty==0)
             {
                 returning = i;
                 break;
@@ -204,12 +214,18 @@ int removeEmployee(Employee arrayEmployee[], int len, int id)
 {
     int i;
     int returning;
+    char confirmation = 'n';
     returning = -1;
     if( len >0 && (id >0 && id<ID_MAX)&& arrayEmployee != NULL)
     {
-        i=findEmployeeById(arrayEmployee,len,id);
-        arrayEmployee[i].isEmpty=1;
-        returning = i;
+    	if((CargarChar(&confirmation, "Desea eliminar al empleado? ('s' - 'n'): ", "La respuesta ingresada es invalida.", 0, 2) != -1) && (confirmation == 's'))
+    	{
+			i=findEmployeeById(arrayEmployee,len,id);
+			arrayEmployee[i].isEmpty=1;
+			printOneEmployee(arrayEmployee[i]);
+			returning = i;
+			fflush(stdin);
+    	}
     }
     return returning;
 }
@@ -311,16 +327,28 @@ int printEmployees(Employee arrayEmployee[], int length)
         printf("\n%-10s %-20s %-20s %-10s %-10s\n",title1,title2,title3,title4,title5);
         for (i=0; i<length; i++)
         {
-            if(arrayEmployee[i].isEmpty==0)
-            {
-                printf("%-10d %-20s %-20s %-10d %-10.2f\n",arrayEmployee[i].id,arrayEmployee[i].lastName,arrayEmployee[i].name,arrayEmployee[i].sector,arrayEmployee[i].salary);
-            }
+        	printOneEmployee(arrayEmployee[i]);
         }
         returning = 0;
     }
     return returning;
 }
 
+/** \brief prints the infomation of one employee
+ *
+ * \param oneEmployee employee which information is going to be shown
+ *
+ */
+int printOneEmployee(Employee oneEmployee)
+{
+	int returning = -1;
+    if(oneEmployee.isEmpty==0)
+    {
+        printf("%-10d %-20s %-20s %-10d %-10.2f\n", oneEmployee.id, oneEmployee.lastName, oneEmployee.name, oneEmployee.sector, oneEmployee.salary);
+        returning = 0;
+    }
+    return returning;
+}
 /** \brief asks to enter the information of another employee in a struct array
  *
  * \param arrayEmployees[] Employee array of employees where the entered information is saved
@@ -347,9 +375,9 @@ int askToAddEmployee(Employee arrayEmployees[], int len, int employeeNumber)
             }
             else
             {
-                printf("\nNo hay mas espacio disponible para agregar empleados.\n");
+                printf("\nNo se pudo cargar el empleado.\n");
             }
-            answer = getUpperChar("\nDesea ingresar otro empleado? ('S' o 'N'): ");
+            CargarChar(&answer, "Desea ingresar otro empleado? ('S' o 'N'): ", "Ha ingresado una respuesta invalida.", 1, 2);
         }while(answer !='N');
     }
     return employeeNumber;
@@ -374,27 +402,58 @@ int modifyEmployee(Employee arrayEmployee[], int len, int idEmployee,int option)
     if( len> 0 && (idEmployee > 0 && idEmployee<ID_MAX)&& arrayEmployee != NULL)
     {
         i=findEmployeeById(arrayEmployee,len,idEmployee);
+        system("cls");
+        printOneEmployee(arrayEmployee[i]);
         switch (option)
         {
             case 1://modify Last name
                 //enter last name
-                getString(auxEmployee.lastName,"\nIngrese apellido del empleado: ", "\nApellido invalido. Ingrese apellido del empleado: ", CHAR_LENGTH);
-                strcpy(arrayEmployee[i].lastName,auxEmployee.lastName);
+            	if(CargarStringNormalizado(auxEmployee.lastName, CHAR_LENGTH, "Ingrese el apellido del empleado: ", "El apellido ingresado es invalido.", 0, 2)==0)
+            	{
+            		strcpy(arrayEmployee[i].lastName,auxEmployee.lastName);
+            		printOneEmployee(arrayEmployee[i]);
+            	}
+            	else
+            	{
+            		option = 0;
+            	}
             break;
             case 2:
                 //enter name
-                getString(auxEmployee.name,"\nIngrese nombre del empleado: ", "\nNombre invalido. Ingrese nombre del empleado: ", CHAR_LENGTH);
-                strcpy(arrayEmployee[i].name,auxEmployee.name);
+            	if(CargarStringNormalizado(auxEmployee.name, CHAR_LENGTH, "Ingrese el nombre del empleado: ", "El nombre ingresado es invalido.", 0, 2)==0)
+            	{
+            		strcpy(arrayEmployee[i].name,auxEmployee.name);
+            		printOneEmployee(arrayEmployee[i]);
+            	}
+            	else
+            	{
+            		option = 0;
+            	}
+
             break;
             case 3:
                 //enter salary
-                auxEmployee.salary = getFloat("\nIngrese sueldo del empleado: ", "\nEl sueldo ingresado en invalido o supera los rangos permitidos. Ingrese sueldo: ",1,MAX_SALARY);
-                arrayEmployee[i].salary = auxEmployee.salary;
+            	if(CargarFlotante(&(auxEmployee.salary), "Ingrese el sueldo del empleado ($10000- $200000): ", "El sueldo ingresado es invalido.", MIN_SALARY, MAX_SALARY, 2)==0)
+            	{
+            		arrayEmployee[i].salary = auxEmployee.salary;
+            		printOneEmployee(arrayEmployee[i]);
+            	}
+            	else
+            	{
+            		option = 0;
+            	}
             break;
             case 4:
                 //enter sector number
-                auxEmployee.sector = getInt("\nIngrese el numero del sector del empleado: ", "\nEl numero del sector seleccionado es invalido. Ingrese el numero de sector del empleado: ",MIN_SECTOR, MAX_SECTOR);
-                arrayEmployee[i].sector=auxEmployee.sector;
+            	if(CargarEntero(&(auxEmployee.sector), "Ingrese el numero del sector: ", "El sector ingresado es invalido.", MIN_SECTOR, MAX_SECTOR, 2)==0)
+            	{
+            		arrayEmployee[i].sector=auxEmployee.sector;
+            		printOneEmployee(arrayEmployee[i]);
+            	}
+            	else
+            	{
+            		option = 0;
+            	}
             break;
             case 0:
                 printf("\nSe ha salido del menu de modificacion empleados\n");
@@ -423,14 +482,16 @@ int modifyEmployee(Employee arrayEmployee[], int len, int idEmployee,int option)
  */
 int optionsMenu (char option1[], char option2[], char option3[], char option4[], char option0[], int lowerOption, int upperOption)
 {
-    int optionNumber;
+    int optionNumber = -1;
     printf("\n%s\n", option1);
     printf("\n%s\n", option2);
     printf("\n%s\n", option3);
     printf("\n%s\n", option4);
     printf("\n%s\n", option0);
     printf("\n");
-    optionNumber = getInt("\nIngrese la opcion deseada: ","\nLa opcion ingresada es incorrecta. Ingrese la opcion deseada: ",lowerOption,upperOption);
+    fflush(stdin);
+    CargarEntero(&optionNumber, "Ingrese la opcion deseada: ", "La opcion ingresada es invalida.", lowerOption, upperOption, 2);
+    fflush(stdin);
     return optionNumber;
 }
 
@@ -508,9 +569,10 @@ int accountAboveAverageEmployees(Employee arrayEmployees[], int len, float avera
     {
         for (i=0; i<len;i++)
         {
-            if (arrayEmployees[i].salary>averageSalary)
+            if (arrayEmployees[i].salary>averageSalary && arrayEmployees[i].isEmpty == 0)
             {
                 aboveAverage++;
+                printOneEmployee(arrayEmployees[i]);
             }
         }
         returning = aboveAverage;

@@ -32,6 +32,7 @@ int main()
     float salary;
     float averageSalary;
     int salariesAboveAverage;
+    int i;
 
     employeeNumber=1;
     flagOption=0;
@@ -39,14 +40,22 @@ int main()
     initEmployees(arrayEmployees,QUANTITY);
    do
    {
+	    fflush(stdin);
         system("cls");
         printf("\n>>>GESTION DE EMPLEADOS<<<\n");
+        fflush(stdin);
         option = optionsMenu("[1] ALTAS","[2] MODIFICAR","[3] BAJA","[4] INFORMAR","[0] SALIR",0,4);
-        while(option>1&&flagOption==0)
+        while(option>1 && (flagOption==0 || countFullPositions(arrayEmployees, QUANTITY)==0))
         {
         	system("cls");
             printf("\nPrimero se deben ingresar empleados.\n");
             option = optionsMenu("[1] ALTAS","[2] MODIFICAR","[3] BAJA","[4] INFORMAR","[0] SALIR",0,4);
+        }
+        if(option == -1)
+        {
+        	printf("\nSe ingresaron demasiadas veces opciones incorrectas. Se termino el programa.\n");
+        	system("pause");
+        	option = 0;
         }
         system("cls");
         switch (option)
@@ -54,35 +63,57 @@ int main()
             case 1:
                 //Alta de empleados
                 employeeNumber=askToAddEmployee(arrayEmployees,QUANTITY,employeeNumber);
+                if(employeeNumber >0)
+                {
+                	printf("Se dieron de alta con exito %i", employeeNumber);
+                }
                 flagOption=1;
             break;
             case 2:
                 system("cls");
                 printf("\nMODIFICAR\n");
-                auxId=getInt("\nIngrese el numero de ID del empleado a modificar: ", "\nEl ID ingresado es invalido. Ingrese el numero de ID del empleado a modificar: ",1,ID_MAX);
-                printf("\nQue parametro desea modificar?\n");
-                subOption = optionsMenu("  [1] Apellido\n","  [2] Nombre\n", "  [3] Sueldo\n", "  [4] Sector\n","	[0] Cancelar\n",0,4);
-                state = modifyEmployee(arrayEmployees,QUANTITY,auxId, subOption);
+            	printEmployees(arrayEmployees, QUANTITY);
+                CargarEntero(&auxId, "Ingrese el id del empleado a modificar: ", "El id ingresado es invalido.", 1, ID_MAX, 2);
+                i = findEmployeeById(arrayEmployees, QUANTITY, auxId);
+                if( i != -1)
+                {
+					printf("\nQue parametro desea modificar?\n");
+					subOption = optionsMenu("  [1] Apellido\n","  [2] Nombre\n", "  [3] Sueldo\n", "  [4] Sector\n","  [0] Cancelar\n",0,4);
+					state = modifyEmployee(arrayEmployees,QUANTITY,auxId, subOption);
+                }
+                else
+                {
+                	state = -1;
+                	printf("No se encontro el empleado buscado.");
+                }
                 functionResult(-1,state,"No se concreto la modificacion del empleado.","El empleado se modifico exitosamente.");
                 system("pause");
+                fflush(stdin);
             break;
             case 3:
                 system("cls");
                 printf("\nBAJA\n");
-                auxId=getInt("\nIngrese el numero de ID del empleado a eliminar: ", "\nEl ID ingresado es invalido. Ingrese el numero de ID del empleado a eliminar: ",1,ID_MAX);
-                state=removeEmployee(arrayEmployees,QUANTITY,auxId);
-                functionResult(-1,state,"No se concreto la eliminacion del empleado.","El empleado se elimino exitosamente.");
-                system("pause");
-                account = countFullPositions(arrayEmployees,QUANTITY);
-                if(account==0)
+                printEmployees(arrayEmployees, QUANTITY);
+                CargarEntero(&auxId, "Ingrese el id del empleado a eliminar: ", "El id ingresado es invalido.", 1, ID_MAX, 2);
+                i = findEmployeeById(arrayEmployees, QUANTITY, auxId);
+                printOneEmployee(arrayEmployees[i]);
+                if(i!=-1)
                 {
-                    flagOption=0;
+					state=removeEmployee(arrayEmployees,QUANTITY,auxId);
                 }
+                else
+                {
+                	state = -1;
+                	printf("\nNo se encontro el empleado ingresado.\n");
+                }
+				functionResult(-1,state,"No se concreto la eliminacion del empleado.","El empleado se elimino exitosamente.");
+				system("pause");
+				fflush(stdin);
             break;
             case 4:
                 system("cls");
                 printf("\nINFORMAR EMPLEADOS\n");
-                subOption=optionsMenu("\n[1] Ordenar empleados.\n","[2] Salarios"," "," ", " ",1,2);
+                subOption=optionsMenu("\n[1] Ordenar empleados.\n","[2] Salarios","[0] Volver"," ", " ",0,2);
                 switch(subOption)
                 {
                     case 1:
@@ -98,13 +129,17 @@ int main()
                     case 2:
                         account=countFullPositions(arrayEmployees,QUANTITY);
                         salary = totalSalary(arrayEmployees,QUANTITY);
-                        averageSalary = salary/account;
-                        salariesAboveAverage=accountAboveAverageEmployees(arrayEmployees,account,averageSalary);
+                        averageSalary = (float) salary/account;
+                        salariesAboveAverage=accountAboveAverageEmployees(arrayEmployees, QUANTITY,averageSalary);
                         functionResult(-1,salariesAboveAverage,"\nERROR. No se pudo completar el informe de salarios.\n","\n>>INFORME DE SALARIOS<<\n");
-                        printf("\nEl salario promedio es de $%.2f y hay  %d empleados cuyo salario supera al promedio.\n",averageSalary, salariesAboveAverage);
+                        printf("\nEl salario total es de %.2f, el salario promedio es de %.2f y hay  %d empleados cuyo salario supera al promedio.\n", salary, averageSalary, salariesAboveAverage);
                     break;
+                    case 0:
+                    	printf("Volviendo al menu\n");
+					break;
                 }
                 system("pause");
+                fflush(stdin);
             break;
             case 0:
                 system("cls");
@@ -112,6 +147,7 @@ int main()
                 printf("\nUsted ha salido del programa.\n");
 
             	system("pause");
+            	fflush(stdin);
             break;
         }
     }while (option != 0);

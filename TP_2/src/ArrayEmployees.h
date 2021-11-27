@@ -18,6 +18,7 @@
 #define MIN_SECTOR 1
 #define MAX_SECTOR 100
 #define MAX_SALARY 200000
+#define MIN_SALARY 10000
 #define ID_MAX 2000
 
 typedef struct
@@ -40,6 +41,7 @@ int findEmployeeById(Employee arrayEmployee[], int len,int id);
 int removeEmployee(Employee arrayEmployee[], int len, int id);
 int sortEmployees(Employee arrayEmployee[], int len, int order);
 int printEmployees(Employee arrayEmployee[], int length);
+int printOneEmployee(Employee oneEmployee);
 int askToAddEmployee(Employee arrayEmployees[], int len, int employeeNumber);
 int modifyEmployee(Employee arrayEmployee[], int len, int idEmployee,int option);
 int optionsMenu (char option1[], char option2[], char option3[], char option4[], char option0[], int lowerOption, int upperOption);
